@@ -1,5 +1,7 @@
+using Elasticsearch.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Nest;
 using PermissionsWebApi.Configuration;
 using PermissionsWebApi.Data;
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,18 @@ builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+
+var elasticUri = builder.Configuration.GetValue<string>("ELKConfiguration:Uri");
+var elasticIndex = builder.Configuration.GetValue<string>("ELKConfiguration:index");
+
+var elasticPool = new SingleNodeConnectionPool(new Uri(elasticUri));
+
+var settings = new ConnectionSettings(elasticPool)
+    .DefaultIndex(elasticIndex);
+
+var elasticClient = new ElasticClient(settings);
+builder.Services.AddSingleton(elasticClient);
 
 var app = builder.Build();
 

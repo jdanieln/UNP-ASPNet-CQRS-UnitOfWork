@@ -1,19 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Nest;
+using PermissionsWebApi.Data;
 using PermissionsWebApi.Models;
 
 namespace PermissionsWebApi.Services
 {
     public class PermissionRepository : GenericRepository<Permission>, IPermissionRepository
     {
-        public PermissionRepository(DbContext context, ILogger logger) : base(context, logger)
+        private IElasticClient _elasticClient;
+        public PermissionRepository(PermissionsWebApiContext context, ElasticClient elasticClient, ILogger logger) : base(context, logger)
         {
+            _elasticClient = elasticClient;
         }
 
         public override async Task<IEnumerable<Permission>> All()
         {
             try
             {
-                return await dbSet.ToListAsync();
+                return await _dbSet.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -25,11 +29,15 @@ namespace PermissionsWebApi.Services
         {
             try
             {
-                var existingEntity = await dbSet.Where(x => x.Id == entity.Id)
+                var existingEntity = await _dbSet.Where(x => x.Id == entity.Id)
                                                     .FirstOrDefaultAsync();
 
                 if (existingEntity == null)
+                {
+                    await _elasticClient.IndexDocumentAsync(entity);
                     return await Add(entity);
+                }
+
 
                 existingEntity.EmployeeForename = entity.EmployeeForename;
                 existingEntity.EmployeeSurname = entity.EmployeeSurname;
@@ -48,12 +56,12 @@ namespace PermissionsWebApi.Services
         {
             try
             {
-                var exist = await dbSet.Where(x => x.Id == id)
+                var exist = await _dbSet.Where(x => x.Id == id)
                                         .FirstOrDefaultAsync();
 
                 if (exist == null) return false;
 
-                dbSet.Remove(exist);
+                _dbSet.Remove(exist);
 
                 return true;
             }
