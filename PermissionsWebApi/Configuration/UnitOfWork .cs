@@ -12,14 +12,19 @@ namespace PermissionsWebApi.Configuration
         private readonly ElasticClient _elasticClient;
 
         public IPermissionRepository Permission { get; private set; }
+        public IPermissionTypeRepository PermissionType { get; private set; }
 
         public UnitOfWork(PermissionsWebApiContext context, ElasticClient elasticClient, ILoggerFactory loggerFactory)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger("logs");
             _elasticClient = elasticClient;
+
             Permission = new PermissionRepository(context, elasticClient, _logger);
+
+            PermissionType = new PermissionTypeRepository(context, elasticClient, _logger);
         }
+
 
         public async Task CompleteAsync()
         {
