@@ -19,14 +19,12 @@ namespace PermissionsWebApi.Controllers
     [ApiController]
     public class PermissionsController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
         private readonly ICommandHandler<PermissionDTO> _permissionCommandHandler;
         private readonly ICommandHandler<RemoveCommand> _removeCommandHandler;
         private readonly IQueryHandler<Permission, QueryCommand> _permissionQueryHandler;
 
-        public PermissionsController(IUnitOfWork unitOfWork, ICommandHandler<PermissionDTO> permissionCommandHandler, ICommandHandler<RemoveCommand> removeCommandHandler, IQueryHandler<Permission, QueryCommand> permissionQueryHandler)
+        public PermissionsController(ICommandHandler<PermissionDTO> permissionCommandHandler, ICommandHandler<RemoveCommand> removeCommandHandler, IQueryHandler<Permission, QueryCommand> permissionQueryHandler)
         {
-            _unitOfWork = unitOfWork;
             _permissionCommandHandler = permissionCommandHandler;
             _removeCommandHandler = removeCommandHandler;
             _permissionQueryHandler = permissionQueryHandler;
@@ -44,7 +42,7 @@ namespace PermissionsWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Permission>> GetPermission(int id)
         {
-            var permission = _permissionQueryHandler.GetOne(new QueryCommand()
+            var permission = await _permissionQueryHandler.GetOne(new QueryCommand()
             {
                 Id = id
             });
@@ -67,17 +65,7 @@ namespace PermissionsWebApi.Controllers
                 return BadRequest();
             }
 
-            var newPermission = new Permission()
-            {
-                Id = permission.Id,
-                EmployeeForename = permission.EmployeeForename,
-                EmployeeSurname = permission.EmployeeSurname,
-                PermissionDate = permission.PermissionDate,
-                PermissionTypeId = permission.PermissionTypeId
-            };
-
-            _unitOfWork.Permission.Add(newPermission);
-            _unitOfWork.Commit();
+            _permissionCommandHandler.Execute(permission);
             return NoContent();
         }
 

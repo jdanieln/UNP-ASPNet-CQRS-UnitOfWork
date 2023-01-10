@@ -33,10 +33,12 @@ builder.Services.AddScoped<IQueryHandler<Permission, QueryCommand>, PermissionQu
 var topic = builder.Configuration.GetValue<string>("KafkaConfiguration:Topic");
 var groupId = builder.Configuration.GetValue<string>("KafkaConfiguration:GroupId");
 var bootstrapServers = builder.Configuration.GetValue<string>("KafkaConfiguration:BootstrapServers");
+var saslUsername = builder.Configuration.GetValue<string>("KafkaConfiguration:SaslUsername"); 
+var saslPassword = builder.Configuration.GetValue<string>("KafkaConfiguration:SaslPassword");
 
-//builder.Services
-    //.AddSingleton<IHostedService, KafkaConsumerHandler>
-    //(kafkaCounsumerHandler => new KafkaConsumerHandler(topic, groupId, bootstrapServers));
+builder.Services
+    .AddSingleton<IHostedService, KafkaConsumerHandler>
+    (kafkaCounsumerHandler => new KafkaConsumerHandler(topic, groupId, bootstrapServers, saslUsername, saslPassword));
 
 var elasticUri = builder.Configuration.GetValue<string>("ELKConfiguration:Uri");
 var elasticIndex = builder.Configuration.GetValue<string>("ELKConfiguration:index");
