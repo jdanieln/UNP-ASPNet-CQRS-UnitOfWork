@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PermissionsWebApi.Configuration;
 using PermissionsWebApi.Data;
+using PermissionsWebApi.DTOs;
 using PermissionsWebApi.Models;
 
 namespace PermissionsWebApi.Controllers
@@ -14,72 +16,66 @@ namespace PermissionsWebApi.Controllers
     [ApiController]
     public class PermissionTypesController : ControllerBase
     {
-        private readonly PermissionsWebApiContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PermissionTypesController(PermissionsWebApiContext context)
+        public PermissionTypesController(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         // GET: api/PermissionTypes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PermissionType>>> GetPermissionType()
         {
-            return await _context.PermissionType.ToListAsync();
+            var permissionTypes = await _unitOfWork.PermissionType.All();
+            return Ok(permissionTypes);
         }
 
         // GET: api/PermissionTypes/5
         [HttpGet("{id}")]
         public async Task<ActionResult<PermissionType>> GetPermissionType(int id)
         {
-            var permissionType = await _context.PermissionType.FindAsync(id);
+            var permissionType = await _unitOfWork.PermissionType.GetById(id);
 
             if (permissionType == null)
             {
                 return NotFound();
             }
 
-            return permissionType;
+            return Ok(permissionType);
         }
 
         // PUT: api/PermissionTypes/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPermissionType(int id, PermissionType permissionType)
+        public async Task<IActionResult> PutPermissionType(int id, PermissionTypeDTO permissionType)
         {
             if (id != permissionType.Id)
             {
                 return BadRequest();
             }
-
-            _context.Entry(permissionType).State = EntityState.Modified;
-
-            try
+            var newPermissionType = new PermissionType()
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PermissionTypeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+                Id = permissionType.Id,
+                Description = permissionType.Description
+            };
+            await _unitOfWork.PermissionType.Add(newPermissionType);
+            await _unitOfWork.CompleteAsync();
             return NoContent();
         }
 
         // POST: api/PermissionTypes
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<PermissionType>> PostPermissionType(PermissionType permissionType)
+        public async Task<ActionResult<PermissionType>> PostPermissionType(PermissionTypeDTO permissionType)
         {
-            _context.PermissionType.Add(permissionType);
-            await _context.SaveChangesAsync();
+            var newPermissionType = new PermissionType()
+            {
+                Id = permissionType.Id,
+                Description = permissionType.Description
+            };
+            await _unitOfWork.PermissionType.Add(newPermissionType);
+            await _unitOfWork.CompleteAsync();
 
             return CreatedAtAction("GetPermissionType", new { id = permissionType.Id }, permissionType);
         }
@@ -88,21 +84,16 @@ namespace PermissionsWebApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePermissionType(int id)
         {
-            var permissionType = await _context.PermissionType.FindAsync(id);
+            var permissionType = await _unitOfWork.PermissionType.GetById(id);
             if (permissionType == null)
             {
                 return NotFound();
             }
 
-            _context.PermissionType.Remove(permissionType);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Permission.Delete(id);
+            await _unitOfWork.CompleteAsync();
 
             return NoContent();
-        }
-
-        private bool PermissionTypeExists(int id)
-        {
-            return _context.PermissionType.Any(e => e.Id == id);
         }
     }
 }

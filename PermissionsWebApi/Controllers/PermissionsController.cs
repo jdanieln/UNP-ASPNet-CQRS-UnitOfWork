@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PermissionsWebApi.Configuration;
 using PermissionsWebApi.Data;
+using PermissionsWebApi.DTOs;
 using PermissionsWebApi.Models;
 
 namespace PermissionsWebApi.Controllers
@@ -47,13 +48,23 @@ namespace PermissionsWebApi.Controllers
         // PUT: api/Permissions/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPermission(int id, Permission permission)
+        public async Task<IActionResult> PutPermission(int id, PermissionDTO permission)
         {
             if (id != permission.Id)
             {
                 return BadRequest();
             }
-            await _unitOfWork.Permission.Add(permission);
+
+            var newPermission = new Permission()
+            {
+                Id = permission.Id,
+                EmployeeForename = permission.EmployeeForename,
+                EmployeeSurname = permission.EmployeeSurname,
+                PermissionDate = permission.PermissionDate,
+                PermissionTypeId = permission.PermissionTypeId
+            };
+
+            await _unitOfWork.Permission.Add(newPermission);
             await _unitOfWork.CompleteAsync();
             return NoContent();
         }
@@ -61,9 +72,17 @@ namespace PermissionsWebApi.Controllers
         // POST: api/Permissions
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Permission>> PostPermission(Permission permission)
+        public async Task<ActionResult<Permission>> PostPermission(PermissionDTO permission)
         {
-            await _unitOfWork.Permission.Add(permission);
+            var newPermission = new Permission()
+            {
+                Id = permission.Id,
+                EmployeeForename = permission.EmployeeForename,
+                EmployeeSurname = permission.EmployeeSurname,
+                PermissionDate = permission.PermissionDate,
+                PermissionTypeId = permission.PermissionTypeId
+            };
+            await _unitOfWork.Permission.Add(newPermission);
             await _unitOfWork.CompleteAsync();
             return CreatedAtAction("GetPermission", new { id = permission.Id }, permission);
         }
