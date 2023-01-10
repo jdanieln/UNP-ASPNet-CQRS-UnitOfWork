@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PermissionsWebApi.Application;
+using PermissionsWebApi.Application.CommandHandler;
+using PermissionsWebApi.Application.QueryHandler;
 using PermissionsWebApi.Configuration;
 using PermissionsWebApi.Data;
 using PermissionsWebApi.DTOs;
@@ -17,17 +20,23 @@ namespace PermissionsWebApi.Controllers
     public class PermissionsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICommandHandler<PermissionDTO> _permissionCommandHandler;
+        private readonly ICommandHandler<RemoveCommand> _removeCommandHandler;
+        private readonly IQueryHandler<Permission, QueryCommand> _permissionQueryHandler;
 
-        public PermissionsController(IUnitOfWork unitOfWork)
+        public PermissionsController(IUnitOfWork unitOfWork, ICommandHandler<PermissionDTO> permissionCommandHandler, ICommandHandler<RemoveCommand> removeCommandHandler, IQueryHandler<Permission, QueryCommand> permissionQueryHandler)
         {
             _unitOfWork = unitOfWork;
+            _permissionCommandHandler = permissionCommandHandler;
+            _removeCommandHandler = removeCommandHandler;
+            _permissionQueryHandler = permissionQueryHandler;
         }
 
         // GET: api/Permissions
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Permission>>> GetPermission()
         {
-            var permissions = await _unitOfWork.Permission.All();
+            var permissions = await _permissionQueryHandler.GetAll();
             return Ok(permissions);
         }
 
@@ -35,7 +44,10 @@ namespace PermissionsWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Permission>> GetPermission(int id)
         {
-            var permission = await _unitOfWork.Permission.GetById(id);
+            var permission = _permissionQueryHandler.GetOne(new QueryCommand()
+            {
+                Id = id
+            });
 
             if (permission == null)
             {
@@ -64,26 +76,17 @@ namespace PermissionsWebApi.Controllers
                 PermissionTypeId = permission.PermissionTypeId
             };
 
-            await _unitOfWork.Permission.Add(newPermission);
-            await _unitOfWork.CompleteAsync();
+            _unitOfWork.Permission.Add(newPermission);
+            _unitOfWork.Commit();
             return NoContent();
         }
 
         // POST: api/Permissions
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Permission>> PostPermission(PermissionDTO permission)
+        public IActionResult PostPermission(PermissionDTO permission)
         {
-            var newPermission = new Permission()
-            {
-                Id = permission.Id,
-                EmployeeForename = permission.EmployeeForename,
-                EmployeeSurname = permission.EmployeeSurname,
-                PermissionDate = permission.PermissionDate,
-                PermissionTypeId = permission.PermissionTypeId
-            };
-            await _unitOfWork.Permission.Add(newPermission);
-            await _unitOfWork.CompleteAsync();
+            _permissionCommandHandler.Execute(permission);
             return CreatedAtAction("GetPermission", new { id = permission.Id }, permission);
         }
 
@@ -91,15 +94,10 @@ namespace PermissionsWebApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePermission(int id)
         {
-            var permission = await _unitOfWork.Permission.GetById(id);
-            if (permission == null)
+            _removeCommandHandler.Execute(new RemoveCommand()
             {
-                return NotFound();
-            }
-
-            await _unitOfWork.Permission.Delete(id);
-            await _unitOfWork.CompleteAsync();
-
+                Id = id
+            });
             return NoContent();
         }
 

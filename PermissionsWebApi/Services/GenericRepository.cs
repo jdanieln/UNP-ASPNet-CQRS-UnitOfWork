@@ -29,18 +29,17 @@ namespace PermissionsWebApi.Services
             return await _dbSet.FindAsync(id);
         }
 
-        public virtual async Task<bool> Add(T entity)
+        public virtual async void Add(T entity)
         {
             await _dbSet.AddAsync(entity);
-            return true;
         }
 
-        public virtual async Task<bool> Delete(int id)
+        public virtual async void Delete(int id)
         {
             throw new NotImplementedException();
         }
 
-        public virtual Task<bool> Upsert(T entity)
+        public virtual void Upsert(T entity)
         {
             throw new NotImplementedException();
         }

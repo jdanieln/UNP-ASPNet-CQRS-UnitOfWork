@@ -25,7 +25,7 @@ namespace PermissionsWebApi.Services
                 return new List<Permission>();
             }
         }
-        public override async Task<bool> Upsert(Permission entity)
+        public override async void Upsert(Permission entity)
         {
             try
             {
@@ -35,40 +35,39 @@ namespace PermissionsWebApi.Services
                 if (existingEntity == null)
                 {
                     await _elasticClient.IndexDocumentAsync(entity);
-                    return await Add(entity);
+                    Add(entity);
                 }
 
 
                 existingEntity.EmployeeForename = entity.EmployeeForename;
                 existingEntity.EmployeeSurname = entity.EmployeeSurname;
                 existingEntity.PermissionDate = entity.PermissionDate;
+                existingEntity.PermissionTypeId = entity.PermissionTypeId;
 
-                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} Upsert function error", typeof(PermissionRepository));
-                return false;
+                throw new Exception();
             }
         }
 
-        public override async Task<bool> Delete(int id)
+        public override async void Delete(int id)
         {
             try
             {
                 var exist = await _dbSet.Where(x => x.Id == id)
                                         .FirstOrDefaultAsync();
 
-                if (exist == null) return false;
+                if (exist == null) throw new Exception();
 
                 _dbSet.Remove(exist);
 
-                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{Repo} Delete function error", typeof(PermissionRepository));
-                return false;
+                throw new Exception();
             }
         }
     }

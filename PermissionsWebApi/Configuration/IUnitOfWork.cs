@@ -7,7 +7,7 @@ namespace PermissionsWebApi.Configuration
         IPermissionRepository Permission { get; }
         IPermissionTypeRepository PermissionType { get; }
 
-        Task CompleteAsync();
+        void Commit();
         void Dispose();
     }
 }

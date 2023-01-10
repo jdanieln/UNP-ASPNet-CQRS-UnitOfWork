@@ -26,9 +26,9 @@ namespace PermissionsWebApi.Configuration
         }
 
 
-        public async Task CompleteAsync()
+        public void Commit()
         {
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
         public void Dispose()
         {

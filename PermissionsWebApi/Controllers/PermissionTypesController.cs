@@ -59,8 +59,8 @@ namespace PermissionsWebApi.Controllers
                 Id = permissionType.Id,
                 Description = permissionType.Description
             };
-            await _unitOfWork.PermissionType.Add(newPermissionType);
-            await _unitOfWork.CompleteAsync();
+            _unitOfWork.PermissionType.Add(newPermissionType);
+            _unitOfWork.Commit();
             return NoContent();
         }
 
@@ -74,8 +74,8 @@ namespace PermissionsWebApi.Controllers
                 Id = permissionType.Id,
                 Description = permissionType.Description
             };
-            await _unitOfWork.PermissionType.Add(newPermissionType);
-            await _unitOfWork.CompleteAsync();
+            _unitOfWork.PermissionType.Add(newPermissionType);
+            _unitOfWork.Commit();
 
             return CreatedAtAction("GetPermissionType", new { id = permissionType.Id }, permissionType);
         }
@@ -90,8 +90,8 @@ namespace PermissionsWebApi.Controllers
                 return NotFound();
             }
 
-            await _unitOfWork.Permission.Delete(id);
-            await _unitOfWork.CompleteAsync();
+            _unitOfWork.Permission.Delete(id);
+            _unitOfWork.Commit();
 
             return NoContent();
         }
