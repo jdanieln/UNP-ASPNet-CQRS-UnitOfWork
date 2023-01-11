@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Domain.Configuration;
+using Domain.DTOs;
+using Domain.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PermissionsWebApi.Configuration;
-using PermissionsWebApi.Data;
-using PermissionsWebApi.DTOs;
-using PermissionsWebApi.Models;
+using PermissionsWebApi.Kafka;
 
 namespace PermissionsWebApi.Controllers
 {
@@ -17,16 +17,19 @@ namespace PermissionsWebApi.Controllers
     public class PermissionTypesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IKafkaProducerHandler _kafkaProducerHandler;
 
-        public PermissionTypesController(IUnitOfWork unitOfWork)
+        public PermissionTypesController(IUnitOfWork unitOfWork, IKafkaProducerHandler kafkaProducerHandler)
         {
             _unitOfWork = unitOfWork;
+            _kafkaProducerHandler = kafkaProducerHandler;
         }
 
         // GET: api/PermissionTypes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PermissionType>>> GetPermissionType()
         {
+            _kafkaProducerHandler.WriteMessage("GET");
             var permissionTypes = await _unitOfWork.PermissionType.All();
             return Ok(permissionTypes);
         }
@@ -35,6 +38,7 @@ namespace PermissionsWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PermissionType>> GetPermissionType(int id)
         {
+            _kafkaProducerHandler.WriteMessage("GET");
             var permissionType = await _unitOfWork.PermissionType.GetById(id);
 
             if (permissionType == null)
@@ -50,6 +54,7 @@ namespace PermissionsWebApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPermissionType(int id, PermissionTypeDTO permissionType)
         {
+            _kafkaProducerHandler.WriteMessage("PUT");
             if (id != permissionType.Id)
             {
                 return BadRequest();
@@ -69,6 +74,7 @@ namespace PermissionsWebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<PermissionType>> PostPermissionType(PermissionTypeDTO permissionType)
         {
+            _kafkaProducerHandler.WriteMessage("POST");
             var newPermissionType = new PermissionType()
             {
                 Id = permissionType.Id,
@@ -84,6 +90,7 @@ namespace PermissionsWebApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePermissionType(int id)
         {
+            _kafkaProducerHandler.WriteMessage("DELETE");
             var permissionType = await _unitOfWork.PermissionType.GetById(id);
             if (permissionType == null)
             {

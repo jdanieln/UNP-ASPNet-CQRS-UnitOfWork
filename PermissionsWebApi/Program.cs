@@ -1,16 +1,17 @@
 using Application.CommandHandler;
+using Application.Commands;
+using Application.QueryHandler;
+using Domain;
+using Domain.Configuration;
+using Domain.Data;
+using Domain.DTOs;
+using Domain.Models;
 using Elasticsearch.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Nest;
-using PermissionsWebApi.Application;
-using PermissionsWebApi.Application.CommandHandler;
-using PermissionsWebApi.Application.QueryHandler;
-using PermissionsWebApi.Configuration;
-using PermissionsWebApi.Data;
-using PermissionsWebApi.DTOs;
 using PermissionsWebApi.Kafka;
-using PermissionsWebApi.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<PermissionsWebApiContext>(options =>
@@ -26,8 +27,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICommandHandler<PermissionDTO>, AddPermissionCommandHandler>();
-builder.Services.AddScoped<ICommandHandler<RemoveCommand>, RemovePermissionCommandHandler>();
-builder.Services.AddScoped<IQueryHandler<Permission, QueryCommand>, PermissionQueryHandler>();
+builder.Services.AddScoped<ICommandHandler<RemoveByIdCommand>, RemovePermissionCommandHandler>();
+builder.Services.AddScoped<IQueryHandler<Permission, QueryByIdCommand>, PermissionQueryHandler>();
 
 
 var topic = builder.Configuration.GetValue<string>("KafkaConfiguration:Topic");
@@ -39,6 +40,11 @@ var saslPassword = builder.Configuration.GetValue<string>("KafkaConfiguration:Sa
 builder.Services
     .AddSingleton<IHostedService, KafkaConsumerHandler>
     (kafkaCounsumerHandler => new KafkaConsumerHandler(topic, groupId, bootstrapServers, saslUsername, saslPassword));
+
+builder.Services
+    .AddSingleton<IKafkaProducerHandler, KafkaProducerHandler>
+    (kafkaCounsumerHandler => new KafkaProducerHandler(topic, groupId, bootstrapServers, saslUsername, saslPassword));
+
 
 var elasticUri = builder.Configuration.GetValue<string>("ELKConfiguration:Uri");
 var elasticIndex = builder.Configuration.GetValue<string>("ELKConfiguration:index");

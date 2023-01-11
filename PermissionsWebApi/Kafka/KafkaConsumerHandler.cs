@@ -4,18 +4,18 @@ namespace PermissionsWebApi.Kafka
 {
     public class KafkaConsumerHandler : IHostedService
     {
-        private readonly string _topic;
-        private readonly string _groupId;
-        private readonly string _bootstrapServers;
+        private readonly string _Topic;
+        private readonly string _GroupId;
+        private readonly string _BootstrapServers;
         private readonly string _SaslUsername;
         private readonly string _SaslPassword;
 
         public KafkaConsumerHandler(string topic, string groupId, string bootstrapServers, string saslUsername, string saslPassword)
         {
 
-            _topic = topic;
-            _groupId = groupId;
-            _bootstrapServers = bootstrapServers;
+            _Topic = topic;
+            _GroupId = groupId;
+            _BootstrapServers = bootstrapServers;
             _SaslUsername = saslUsername;
             _SaslPassword = saslPassword;
         }
@@ -23,8 +23,8 @@ namespace PermissionsWebApi.Kafka
         {
             var conf = new ConsumerConfig
             {
-                GroupId = _groupId,
-                BootstrapServers = _bootstrapServers,
+                GroupId = _GroupId,
+                BootstrapServers = _BootstrapServers,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 SecurityProtocol = SecurityProtocol.SaslSsl,
                 SaslUsername = _SaslUsername,
@@ -33,7 +33,7 @@ namespace PermissionsWebApi.Kafka
             using (var builder = new ConsumerBuilder<Ignore,
                 string>(conf).Build())
             {
-                builder.Subscribe(_topic);
+                builder.Subscribe(_Topic);
                 var cancelToken = new CancellationTokenSource();
                 try
                 {
