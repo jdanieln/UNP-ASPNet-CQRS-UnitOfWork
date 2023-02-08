@@ -26,6 +26,7 @@ builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 builder.Services.AddScoped<ICommandHandler<PermissionDTO>, AddPermissionCommandHandler>();
 builder.Services.AddScoped<ICommandHandler<RemoveByIdCommand>, RemovePermissionCommandHandler>();
 builder.Services.AddScoped<IQueryHandler<Permission, QueryByIdCommand>, PermissionQueryHandler>();

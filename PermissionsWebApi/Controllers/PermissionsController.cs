@@ -22,6 +22,7 @@ namespace PermissionsWebApi.Controllers
         private readonly ICommandHandler<PermissionDTO> _permissionCommandHandler;
         private readonly ICommandHandler<RemoveByIdCommand> _removeCommandHandler;
         private readonly IQueryHandler<Permission, QueryByIdCommand> _permissionQueryHandler;
+        
         private readonly IKafkaProducerHandler _kafkaProducerHandler;
         public PermissionsController(
             ICommandHandler<PermissionDTO> permissionCommandHandler, 
